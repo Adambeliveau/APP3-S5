@@ -37,18 +37,17 @@ def extract_sin(mod_X_m, deg_X_m):
     return m_list, extracted_mod_X_m, extracted_mod_X_m_dB, extracted_deg_X_m
 
 
-def build_RIF(X_m, N):
-    m = int((math.pi / 1000) * N / 2 * math.pi)
+def build_RIF(N):
+    m = int((math.pi / 1000) * N / (2 * math.pi))
     k = 2 * m + 1
-    # print(f'm: {m} | N: {N} | k: {k}')
-    h_n = [(1 / N) * (math.sin(math.pi * n * k / N) / math.sin(math.pi * n / N)) for n in range(-N, N) if n != 0]
-    h_n.insert(len(h_n)-k+1, k / N)
+    h_n = [(1 / N) * (math.sin(math.pi * n * k / N) / math.sin(math.pi * n / N)) for n in range(int(-N/2)+1, int(N/2)) if n != 0]
+    h_n.insert(math.ceil(len(h_n)/2), k / N)
     H_m = reponse_freq(h_n)
-    return h_n, H_m, N
+    return h_n, np.abs(H_m)
 
 
 def reponse_freq(h_n):
-    return np.fft.fft(np.concatenate((h_n, np.zeros(80000))))
+    return np.fft.fft(np.concatenate((h_n, np.zeros(160000-len(h_n)))))
 
 
 def plot_wav():
@@ -74,21 +73,20 @@ def plot_wav():
     # ax[3].set_xlabel('m')
     # plt.tight_layout(pad=3.0)
 
-    w = [2 * math.pi * m / len(X_m) for m in range(len(X_m))]
+    range_start = 800
+    range_stop = 900
+    range_step = 1
+    deltas = []
+    for N in tqdm(range(range_start, range_stop, range_step)):
+        h_n, H_m = build_RIF(N)
+        mod_H_m = 20*np.log10(H_m)
+        w = [2 * math.pi * m / len(H_m) for m in range(len(H_m))]
+        deltas.append(-3 - np.interp(math.pi / 1000, w, mod_H_m))
 
-    # for i in tqdm(range(2, 1000000, 2)):
-    #     h_n, H_m, N = build_RIF(X_m, i)
-    #     dB = 20 * np.log10(H_m[w.index(math.pi / 1000)]).real
-    #     if -2.00 > dB > -4.00:
-    #         print(f'H_m(pi/1000): {i}')
-    h_n, H_m, N = build_RIF(X_m, 4)
-    fig, ax = plt.subplots(2, 1)
-    range_plot = range(-N, N)
-    ax[0].stem(range_plot, h_n)
-    ax[1].plot(w[:w.index(math.pi)], 20*np.log10(H_m)[:len(w[:w.index(math.pi)])])
-    plt.show()
+    print(f'closest delta: {deltas[(np.abs(deltas)).argmin()]} | corresponding N: {range_start + (np.abs(deltas)).argmin()}')
 
-
+    # plt.legend(np.arange(range_start, range_stop, range_step).astype(str))
+    # plt.show()
 
 
 if __name__ == '__main__':
