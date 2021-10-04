@@ -4,7 +4,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from utils import read_wav, fft, convolution, write_wav
+from utils import read_wav, fft, convolution, write_wav, normalisation
 
 
 def find_best_N() -> int:
@@ -24,12 +24,13 @@ def find_best_N() -> int:
     deltas = []
     for N in tqdm(range(range_start, range_stop, range_step)):
         h_n, _, mod_H_m = build_RIF(N)
-        mod_H_m_dB = 20*np.log10(mod_H_m)
+        mod_H_m_dB = 20 * np.log10(mod_H_m)
         w = [2 * math.pi * m / len(mod_H_m) for m in range(len(mod_H_m))]
         deltas.append(gain - np.interp(math.pi / 1000, w, mod_H_m_dB))
 
     filter_order = range_start + ((np.abs(deltas)).argmin() * range_step)
-    print(f'closest delta: {deltas[(np.abs(deltas)).argmin()]}dB | DC gain: {mod_H_m_dB[0]}dB| corresponding N: {filter_order}')
+    print(
+        f'closest delta: {deltas[(np.abs(deltas)).argmin()]}dB | DC gain: {mod_H_m_dB[0]}dB| corresponding N: {filter_order}')
     return filter_order
 
 
@@ -64,22 +65,24 @@ def build_RIF(N_filter: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         1. impulse response -> h[n]
         2. frequency response -> h[m] (h[n] is padded to get a better resolution)
     :param N_filter: filter order
-    :return: the impulse response and module of the frequency response
+    :return: h_n, H_m, mod_H_m
     """
     # w_c = 2*pi*m/N -> m = w_c*N/2*pi where w_c is pi/1000
     m = int((math.pi / 1000) * N_filter / (2 * math.pi))
     k = 2 * m + 1
 
     # impulse response
-    h_n = [(1 / N_filter) * (math.sin(math.pi * n * k / N_filter) / math.sin(math.pi * n / N_filter)) for n in range(int(-N_filter/2)+1, int(N_filter/2)) if n != 0]
-    h_n.insert(math.ceil(len(h_n)/2), k / N_filter)
+    h_n = np.array([(1 / N_filter) * (math.sin(math.pi * n * k / N_filter) / math.sin(math.pi * n / N_filter)) for n in
+                    range(int(-N_filter / 2) + 1, int(N_filter / 2)) if n != 0])
+    np.insert(h_n, math.ceil(len(h_n) / 2), k / N_filter)
 
     # frequency response
-    H_m, mod_H_m, _ = fft(np.concatenate((h_n, np.zeros(160000-len(h_n)))))
-    return np.array(h_n), np.array(H_m), np.array(mod_H_m)
+    H_m, mod_H_m, _ = fft(np.concatenate((h_n, np.zeros(160000 - len(h_n)))))
+    return h_n, H_m, mod_H_m
 
 
-def build_plots(N_filter: int, mod_X_m: np.ndarray, deg_X_m: np.ndarray, h_n: np.ndarray, mod_H_m: np.ndarray, w:np.ndarray) -> None:
+def build_plots(N_filter: int, mod_X_m: np.ndarray, deg_X_m: np.ndarray, h_n: np.ndarray, mod_H_m: np.ndarray,
+                w: np.ndarray) -> None:
     """
      Builds plots from the data extracted from previous functions
     :param N_filter: filter order
@@ -117,7 +120,7 @@ def build_plots(N_filter: int, mod_X_m: np.ndarray, deg_X_m: np.ndarray, h_n: np
 
     # RIF filter plots
     plt.figure(2)
-    plt.stem(range(int((-N_filter/2)+1), int(N_filter/2)), h_n)
+    plt.stem(range(int((-N_filter / 2) + 1), int(N_filter / 2)), h_n)
     plt.title('réponse impulsionnelle de h[n]')
     plt.xlabel('n')
     plt.ylabel('amplitude')
@@ -128,42 +131,46 @@ def build_plots(N_filter: int, mod_X_m: np.ndarray, deg_X_m: np.ndarray, h_n: np
     plt.ylabel('amplitude(dB)')
 
 
-def synthesis(mod_X_m: np.ndarray, phase_X_m: np.ndarray, m_list: np.ndarray, envelop: np.ndarray) -> np.ndarray:
+def synthesis(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w: np.ndarray,
+              envelop: np.ndarray, k: int) -> np.ndarray:
     """
     add sin and multiply the result with the envelop
     :param mod_X_m: modules of the signal
     :param phase_X_m: phases of the signal
-    :param m: m from the dominant sines
+    :param w: omega[m]
     :param envelop: envelop from the convolution
+    :param k: k index for different notes
     :return:
     """
-    w = np.array([2 * math.pi * m / len(m_list) for m in m_list])
+    f = (2**(k/12))
     summation = np.zeros(len(envelop))
     for n in tqdm(range(len(envelop))):
-        summation[n] = np.sum(np.multiply(mod_X_m, np.sin(np.multiply(n, w) + phase_X_m)))
-
-    plt.figure(5)
-    plt.plot(summation)
-    plt.figure(6)
-    plt.plot(envelop)
+        summation[n] = np.sum(np.multiply(mod_X_m, np.sin(np.multiply(f*n, w) + phase_X_m)))
 
     return np.multiply(summation, envelop)
 
 
 if __name__ == '__main__':
-
     N_filter = find_best_N()
     f_e, x_n = read_wav()
-    X_m, mod_X_m, phase_X_m = fft(x_n)
+    window = np.hanning(len(x_n))
+    X_m, mod_X_m, phase_X_m = fft(x_n * window)
     m, mod_X_m, phase_X_m = extract_sin(mod_X_m, phase_X_m)
-    print(len(m))
     h_n, H_m, mod_H_m = build_RIF(N_filter)
-    w = np.array([2 * math.pi * m / len(mod_H_m) for m in range(len(mod_H_m))])
+    w = np.array([normalisation(m, len(mod_H_m)) for m in range(len(mod_H_m))])
+    w_m = np.where(w[m] < math.pi, w[m], w[m] - (2 * math.pi))
 
     # build_plots(N_filter, mod_X_m, phase_X_m, h_n, mod_H_m, w)
 
     envelop = convolution(h_n, np.abs(x_n))
-    signal = synthesis(mod_X_m, phase_X_m, m, envelop)
+    signal = np.array([])
+    for k in [-2, -2, -2, -6, 'silence', -4, -4, -4, -7]:
+        if k == 'silence':
+            signal = np.append(signal, np.zeros(int(f_e/3)))
+        elif k in [-6, -7]:
+            signal = np.append(signal, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:f_e])
+        else:
+            signal = np.append(signal, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:int(f_e/3)])
 
     plt.figure(4)
     plt.plot(signal)

@@ -28,16 +28,19 @@ def fft(input_n: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     :param input_n:
     :return: transformed input, module of output, phase of output
     """
-    window = np.hanning(160000)
-    output_m = np.fft.fft(input_n*window)
+    output_m = np.fft.fft(input_n)
     return output_m, np.abs(output_m), np.angle(output_m)
 
 
-def convolution(X_m: np.ndarray, H_m: np.ndarray) -> np.ndarray:
+def convolution(h_n: np.ndarray, mod_x_n: np.ndarray) -> np.ndarray:
     """
     convolution between the signal and the frequency response
-    :param X_m: signal
-    :param H_m: frequency response
+    :param h_n: impulse response
+    :param mod_x_n: module x[n]
     :return: convolution
     """
-    return np.convolve(X_m, H_m)
+    return np.convolve(h_n, mod_x_n)
+
+
+def normalisation(m: int, N: int):
+    return 2 * np.pi * m / N
