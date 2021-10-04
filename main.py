@@ -166,7 +166,7 @@ def build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e) -> np.ndarray:
             symphony = np.append(symphony, np.zeros(int(f_e / 3)))
         else:
             nb_sample = f_e if k in [-6, -7] else int(f_e / 3)
-            symphony = np.append(symphony, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:f_e])
+            symphony = np.append(symphony, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:nb_sample])
 
     plt.figure(4)
     plt.plot(symphony)
