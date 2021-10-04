@@ -150,6 +150,30 @@ def synthesis(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w: np.ndarray,
     return np.multiply(summation, envelop)
 
 
+def build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e) -> np.ndarray:
+    """
+    Builds the 5th symphony from Beetoven from the guitar note
+    :param mod_X_m: module X[m]
+    :param phase_X_m: phase X[m]
+    :param w_m: omega w[m]
+    :param envelop: envelop obtained from the convolution(h_n, |x[n]|)
+    :param f_e: sample rate
+    :return: symphony
+    """
+    symphony = np.array([])
+    for k in [-2, -2, -2, -6, 'silence', -4, -4, -4, -7]:
+        if k == 'silence':
+            symphony = np.append(symphony, np.zeros(int(f_e / 3)))
+        else:
+            nb_sample = f_e if k in [-6, -7] else int(f_e / 3)
+            symphony = np.append(symphony, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:f_e])
+
+    plt.figure(4)
+    plt.plot(symphony)
+
+    return symphony
+
+
 if __name__ == '__main__':
     N_filter = find_best_N()
     f_e, x_n = read_wav()
@@ -163,16 +187,5 @@ if __name__ == '__main__':
     # build_plots(N_filter, mod_X_m, phase_X_m, h_n, mod_H_m, w)
 
     envelop = convolution(h_n, np.abs(x_n))
-    signal = np.array([])
-    for k in [-2, -2, -2, -6, 'silence', -4, -4, -4, -7]:
-        if k == 'silence':
-            signal = np.append(signal, np.zeros(int(f_e/3)))
-        elif k in [-6, -7]:
-            signal = np.append(signal, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:f_e])
-        else:
-            signal = np.append(signal, (synthesis(mod_X_m, phase_X_m, w_m, envelop, k))[:int(f_e/3)])
-
-    plt.figure(4)
-    plt.plot(signal)
-    plt.show()
-    write_wav(f_e, signal)
+    symphony = build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e)
+    write_wav(f_e, symphony)

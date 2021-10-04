@@ -42,5 +42,11 @@ def convolution(h_n: np.ndarray, mod_x_n: np.ndarray) -> np.ndarray:
     return np.convolve(h_n, mod_x_n)
 
 
-def normalisation(m: int, N: int):
+def normalisation(m: int, N: int) -> float:
+    """
+    time domain to frequency domain conversion
+    :param m: samples(time domain)
+    :param N: number of samples
+    :return: samples(frequency domain) -> omega
+    """
     return 2 * np.pi * m / N
