@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 
 
@@ -11,10 +12,11 @@ def add_plotting_args(plt_typle="", xaxis=None, yaxis=None, title="", xlabel="",
             'ylabel': ylabel}
 
 
-def build_plots(*args) -> None:
+def build_plots(pp: PdfPages, *args) -> None:
     """
      Builds plots from the data extracted from previous functions
-    :param *args: contains dict with parameters to build plots
+    :param pp: pdf file where the figures are going to be saved
+    :param args: contains dict with parameters to build plots
     :return: None
     """
     for plotting_args in tqdm(args, desc='building plots'):
@@ -32,3 +34,5 @@ def build_plots(*args) -> None:
         plt.title(plotting_args['title'])
         plt.xlabel(plotting_args['xlabel'])
         plt.ylabel(plotting_args['ylabel'])
+        pp.savefig()
+    pp.close()
