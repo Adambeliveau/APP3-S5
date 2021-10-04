@@ -10,7 +10,7 @@
 * Multiply the result with the envelop
 * Produce the 5th harmony from Beethoven
 ##Filtering
-* Filter 1000Hz with a band-reject FIR filter 
+* Filter 1000Hz with a band-stop FIR filter 
     * rejected band: 960 Hz to 1040hz
     * Gain: 0dB
     * N: 6000

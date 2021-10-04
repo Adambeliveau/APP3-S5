@@ -4,7 +4,7 @@ from typing import Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
-from utils import read_wav, fft, convolution, write_wav, normalisation
+from utils import read_wav, fft, convolution, write_wav, normalisation, low_pass, band_stop
 
 
 def find_best_N() -> int:
@@ -23,7 +23,7 @@ def find_best_N() -> int:
     range_step = 1
     deltas = []
     for N in tqdm(range(range_start, range_stop, range_step)):
-        h_n, _, mod_H_m = build_RIF(N)
+        h_n, mod_H_m = build_RIF(N)
         mod_H_m_dB = 20 * np.log10(mod_H_m)
         w = [2 * math.pi * m / len(mod_H_m) for m in range(len(mod_H_m))]
         deltas.append(gain - np.interp(math.pi / 1000, w, mod_H_m_dB))
@@ -59,26 +59,28 @@ def extract_sin(mod_X_m: np.ndarray, deg_X_m: np.ndarray) -> Tuple[np.ndarray, n
     return np.array(m_list), np.array(extracted_mod_X_m), np.array(extracted_deg_X_m)
 
 
-def build_RIF(N_filter: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple[np.ndarray, np.ndarray]:
     """
     Builds the RIF filter by:
         1. impulse response -> h[n]
         2. frequency response -> h[m] (h[n] is padded to get a better resolution)
     :param N_filter: filter order
+    :param f_c: filter cutoff frequency
+    :param f_e: sample rate
+    :param type: filter type
     :return: h_n, H_m, mod_H_m
     """
-    # w_c = 2*pi*m/N -> m = w_c*N/2*pi where w_c is pi/1000
-    m = int((math.pi / 1000) * N_filter / (2 * math.pi))
-    k = 2 * m + 1
 
     # impulse response
-    h_n = np.array([(1 / N_filter) * (math.sin(math.pi * n * k / N_filter) / math.sin(math.pi * n / N_filter)) for n in
-                    range(int(-N_filter / 2) + 1, int(N_filter / 2)) if n != 0])
-    np.insert(h_n, math.ceil(len(h_n) / 2), k / N_filter)
+    impulse_switcher = {
+        'low_pass': low_pass,
+        'band_stop': band_stop
+    }
+    h_n = impulse_switcher[type](N_filter, f_c, f_e)
 
     # frequency response
-    H_m, mod_H_m, _ = fft(np.concatenate((h_n, np.zeros(160000 - len(h_n)))))
-    return h_n, H_m, mod_H_m
+    H_m, mod_H_m, _ = fft(np.concatenate((h_n, np.zeros(length - len(h_n)))))
+    return h_n, mod_H_m
 
 
 def build_plots(N_filter: int, mod_X_m: np.ndarray, deg_X_m: np.ndarray, h_n: np.ndarray, mod_H_m: np.ndarray,
@@ -175,17 +177,46 @@ def build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e) -> np.ndarray:
 
 
 if __name__ == '__main__':
-    N_filter = find_best_N()
-    f_e, x_n = read_wav()
-    window = np.hanning(len(x_n))
-    X_m, mod_X_m, phase_X_m = fft(x_n * window)
-    m, mod_X_m, phase_X_m = extract_sin(mod_X_m, phase_X_m)
-    h_n, H_m, mod_H_m = build_RIF(N_filter)
-    w = np.array([normalisation(m, len(mod_H_m)) for m in range(len(mod_H_m))])
-    w_m = np.where(w[m] < math.pi, w[m], w[m] - (2 * math.pi))
+    # # find the best N order for the low pass filter
+    # N_filter = find_best_N()
+    #
+    # # extract sines meeting the specs
+    # f_e, x_n = read_wav('note_guitare_LAd.wav')
+    # window = np.hanning(len(x_n))
+    # X_m, mod_X_m, phase_X_m = fft(x_n * window)
+    # m, mod_X_m, phase_X_m = extract_sin(mod_X_m, phase_X_m)
+    #
+    # # filter LA through low_pass to only get the tone
+    # f_c_lp = math.pi/1000
+    # h_n, mod_H_m = build_RIF(N_filter, f_c_lp, f_e, 'low_pass')
+    # w = np.array([normalisation(m, len(mod_H_m)) for m in range(len(mod_H_m))])
+    #
+    # # make the 5th symphony out of the filtered LA from the guitar
+    # envelop = convolution(h_n, np.abs(x_n))
+    # symphony = build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e)
+    # write_wav(f_e, symphony, 'note_guitare_LAd_filtered.wav')
 
+    # filter 1000Hz sine in band stop
+    f_e, x_n = read_wav('note_basson_plus_sinus_1000_Hz.wav')
+    N_band_stop = 6000
+    f_c_bs = 1000
+    h_n_bs, mod_H_m = build_RIF(6000, f_c_bs, f_e, 'band_stop', len(x_n))
+
+    plt.figure(1)
+    plt.stem(range(int(-N_band_stop/2) + 1, int(N_band_stop/2)), h_n_bs)
+
+    # normalise with the ration m/N than use the result to extract f from w = 2*pi*f/f_e
+    f = np.array([(normalisation(m, len(x_n))*f_e)/(2 * math.pi) for m in range(len(x_n))])
+
+    plt.figure(3)
+    plt.plot(f, 20*np.log10(mod_H_m))
+
+    y_n = convolution(h_n_bs, x_n)
+    write_wav(f_e, y_n, 'basson_filtered.wav')
+
+    plt.figure(2)
+    plt.stem(y_n)
+    plt.show()
+
+    # plot parameters
     # build_plots(N_filter, mod_X_m, phase_X_m, h_n, mod_H_m, w)
-
-    envelop = convolution(h_n, np.abs(x_n))
-    symphony = build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e)
-    write_wav(f_e, symphony)
