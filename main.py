@@ -29,12 +29,12 @@ if __name__ == '__main__':
     h_n_lp, mod_H_m_lp = build_RIF(N_low_pass, f_c_lp, f_e, 'low_pass', N_ech)
 
     # synthesise LA
-    envelop = convolution(h_n_lp, np.abs(x_n))
-    LA = synthesis(mod_X_m, phase_X_m, w_lp[m], envelop, 0)
-    write_wav(f_e, LA.astype(np.int16), 'audio_files/LA_filtered.wav')
+    envelope = convolution(h_n_lp, np.abs(x_n))
+    LA = synthesis(mod_X_m, phase_X_m, w_lp[m], envelope, 1)
+    write_wav(f_e, LA.astype(np.int16), 'audio_files/LAd_filtered.wav')
 
     # make the 5th symphony out of the filtered LA from the guitar
-    symphony = build_symphony(mod_X_m, phase_X_m, w_lp[m], envelop, f_e)
+    symphony = build_symphony(mod_X_m, phase_X_m, w_lp[m], envelope, f_e)
     write_wav(f_e, symphony.astype(np.int16), 'audio_files/symphony.wav')
 
     # filter 1000Hz sine in band stop
@@ -57,6 +57,7 @@ if __name__ == '__main__':
                      add_plotting_args('stem', w_lp_shifted[m], phase_X_m, 'phase X[w] de la guitare', 'w(rad/échantillons)', 'phase(rad)'),
                      add_plotting_args('stem', range(int(-N_low_pass / 2) + 1, int(N_low_pass / 2)), h_n_lp, f'réponse impulsionnelle du filtre passe-bas N={N_low_pass}', 'm(échatillons)', 'amplitude'),
                      add_plotting_args('plot', w_lp, 20*np.log10(mod_H_m_lp), f'réponse fréquencielle du filtre passe-bas N={N_low_pass}', 'w(rad/échantillons)', 'amplitude(dB)'),
+                     add_plotting_args('plot', None, envelope, 'envelope du signal x[n] de la guitare', 'n(échantillons)', 'amplitude'),
                      add_plotting_args('plot', None, LA, 'note LA filtré à traver le passe-bas de N=884', 'n(échantillons)', 'amplitude'),
                      add_plotting_args('plot', None, symphony, '5e symphony de Beethoven', 'n(échantillons)', 'amplitude'),
                      add_plotting_args('plot', None, h_n_bs, f'réponse impulsionnelle du filtre passe-bas N={N_band_stop}', 'm(échatillons)', 'amplitude'),

@@ -3,13 +3,13 @@
 * Extract parameters (frequency, module, phase)
 * FFT signal
 
-## Envelop
+## envelope
 * Filter the straightened signal by a convolution with a low-pass FIR filter.
 * Demonstrate how N was obtained
 
 ## Synthesis
 * Add sin (sin extracted from the requirements)
-* Multiply the result with the envelop
+* Multiply the result with the envelope
 * Produce the 5th harmony from Beethoven
 
 ## Filtering
