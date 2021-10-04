@@ -62,4 +62,6 @@ if __name__ == '__main__':
                      add_plotting_args('plot', None, h_n_bs, f'réponse impulsionnelle du filtre passe-bas N={N_band_stop}', 'm(échatillons)', 'amplitude'),
                      add_plotting_args('plot', w_bs, 20 * np.log10(mod_H_m_bs), f'réponse fréquencielle du filtre passe-bas N={N_band_stop}', 'm(échantillons)', 'amplitude(dB)'),
                      add_plotting_args('plot', None, y_n, 'signal filtré du basson y[n]', 'n(échantillons)', 'amplitude')]
+
+    # plot building
     build_plots(pp, *plotting_args)

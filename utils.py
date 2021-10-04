@@ -14,7 +14,7 @@ def read_wav(filename: str) -> Tuple[int, np.ndarray]:
     return wf.read(filename)
 
 
-def write_wav(samplerate: int, signal: np.ndarray, filename: str):
+def write_wav(samplerate: int, signal: np.ndarray, filename: str) -> None:
     """
     write the synthesised signal in a wav file
     :param samplerate: samplerate for the wav file
@@ -25,7 +25,7 @@ def write_wav(samplerate: int, signal: np.ndarray, filename: str):
     wf.write(filename, samplerate, signal)
 
 
-def extract_sin(mod_X_m: np.ndarray, phase_X_m: np.ndarray, f_e:float, w_list: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def extract_sin(mod_X_m: np.ndarray, phase_X_m: np.ndarray, f_e: float, w_list: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     requirements to choose a frequency: 10% max amplitude, amplitude[m] > amplitude[m+1] et amplitude[m] > amplitude[m-1]
     :param mod_X_m: module of X[m]
@@ -76,6 +76,7 @@ def normalisation(m: float, N: float, shifted=False) -> float:
     time domain to frequency domain conversion
     :param m: samples(time domain)
     :param N: number of samples
+    :param shifted: when true, w will be between -pi and pi
     :return: samples(frequency domain) -> omega
 
     ** you can use the ratio f_c/f_e instead of m/N

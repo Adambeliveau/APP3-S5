@@ -21,7 +21,7 @@ def synthesis(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w: np.ndarray,
     return np.multiply(summation, envelop)
 
 
-def build_symphony(mod_X_m, phase_X_m, w_m, envelop, f_e) -> np.ndarray:
+def build_symphony(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w_m: np.ndarray, envelop: np.ndarray, f_e: float) -> np.ndarray:
     """
     Builds the 5th symphony from Beetoven from the guitar note
     :param mod_X_m: module X[m]

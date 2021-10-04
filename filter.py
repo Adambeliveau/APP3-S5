@@ -63,6 +63,13 @@ def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple
 
 
 def low_pass(N_filter: int, f_c: float, f_e: float) -> np.ndarray:
+    """
+    function to calculate a low pass filter
+    :param N_filter: filter order
+    :param f_c: cutoff frequency
+    :param f_e: sample rate
+    :return: impulse response
+    """
     # w_c = 2*pi*m/N -> m = w_c*N/2*pi where w_c
     w_c = normalisation(f_c, f_e)
     m = int(w_c * N_filter / (2 * math.pi))
@@ -79,6 +86,13 @@ def low_pass(N_filter: int, f_c: float, f_e: float) -> np.ndarray:
 
 
 def band_stop(N_filter: int, f_c: float, f_e: float) -> np.ndarray:
+    """
+    function to calculate a band stop filter
+    :param N_filter: filter order
+    :param f_c: cutoff frequency
+    :param f_e: sample rate
+    :return: impulse response
+    """
     # 2f_c_1 = 1040 - 960 -> f_c_1 = 40
     f_c_lp = 40
     h_n_lp = low_pass(N_filter, f_c_lp, f_e)

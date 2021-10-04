@@ -3,8 +3,18 @@ from matplotlib.backends.backend_pdf import PdfPages
 from tqdm import tqdm
 
 
-def add_plotting_args(plt_typle="", xaxis=None, yaxis=None, title="", xlabel="", ylabel=""):
-    return {'plt_type': plt_typle,
+def add_plotting_args(plt_type="", xaxis=None, yaxis=None, title="", xlabel="", ylabel="") -> dict:
+    """
+    used to return a dictionary containing info used for plotting
+    :param plt_type: type of the plot -> plot or stem
+    :param xaxis: x axis data
+    :param yaxis: y axis data
+    :param title: title for the plot
+    :param xlabel: label for the x axis
+    :param ylabel: label for the y axis
+    :return: formatted dictionary
+    """
+    return {'plt_type': plt_type,
             'xaxis': xaxis,
             'yaxis': yaxis,
             'title': title,
