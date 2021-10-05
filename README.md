@@ -13,8 +13,8 @@
 * Produce the 5th harmony from Beethoven
 
 ## Filtering
-* Filter 1000Hz with a band-stop FIR filter 
+* Filter a 1000Hz sine out of `note_basson_plus_sine_1000_hz` with a band-stop FIR filter 
     * rejected band: 960 Hz to 1040hz
     * Gain: 0dB
     * N: 6000
-* Impulse response for the filtered 1000Hz sin
+* plot the impulse response of the filter
