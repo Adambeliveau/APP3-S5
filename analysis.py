@@ -2,6 +2,7 @@ import math
 from typing import Tuple
 
 import numpy as np
+import pandas as pd
 
 from utils import normalisation
 
@@ -30,3 +31,15 @@ def extract_sin(mod_X_m: np.ndarray, phase_X_m: np.ndarray, f_e: float, w_list: 
     m_index, mod_X_m, phase_X_m = zip(*sorted_modules)
 
     return np.array(m_index), np.array(mod_X_m), np.array(phase_X_m)
+
+
+def export_data(frequencies: np.ndarray, mod_X_m: np.ndarray, phase_X_m: np.ndarray) -> None:
+    """
+    Export frequency, module and phase from the selected harmonics to a csv file
+    :param frequencies: frequencies of the selected harmonics
+    :param mod_X_m: modules of the selected harmonics
+    :param phase_X_m: phases of the selected harmonics
+    :return: None
+    """
+    df = pd.DataFrame({'Fréquences': frequencies, 'Modules': mod_X_m, 'Phases': phase_X_m})
+    df.to_csv('CSV_files/exported_data.csv')
