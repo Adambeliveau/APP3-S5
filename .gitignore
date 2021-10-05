@@ -1,2 +1,5 @@
 .idea/
 __pycache__
+audio_files/LAd_filtered.wav
+audio_files/basson_filtered.wav
+audio_files/symphony.wav
