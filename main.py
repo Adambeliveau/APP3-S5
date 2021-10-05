@@ -44,11 +44,10 @@ if __name__ == '__main__':
     h_n_bs, mod_H_m_bs = build_RIF(6000, f_c_bs, f_e, 'band_stop', len(x_n))
     w_bs = np.array([normalisation(m, len(mod_H_m_bs)) for m in range(len(mod_H_m_bs))])
 
-    # normalise with the ration m/N than use the result to extract f from w = 2*pi*f/f_e
-    f = np.array([(normalisation(m, len(x_n))*f_e)/(2 * math.pi) for m in range(len(x_n))])
-
     # remove 1000Hz sine from signal and export it to a wav file
     y_n = convolution(h_n_bs, x_n)
+    y_n = convolution(h_n_bs, y_n)
+    y_n = convolution(h_n_bs, y_n)
     write_wav(f_e, y_n.astype(np.int16), 'audio_files/basson_filtered.wav')
 
     # plot parameters
