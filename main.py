@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # synthesise LA
     envelope = convolution(h_n_lp, np.abs(x_n))
-    LA = synthesis(mod_X_m, phase_X_m, w_lp[m], envelope, 1)
+    LA = synthesis(mod_X_m, phase_X_m, w_lp[m], envelope, 0)
     write_wav(f_e, LA.astype(np.int16), 'audio_files/LAd_filtered.wav')
 
     # make the 5th symphony out of the filtered LA from the guitar

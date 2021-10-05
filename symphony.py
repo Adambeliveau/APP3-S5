@@ -32,7 +32,7 @@ def build_symphony(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w_m: np.ndarray, 
     :return: symphony
     """
     symphony = np.array([])
-    for val in [(3, -2), (1, -6), 'silence', (3, -4), (1, -7)]:
+    for val in [(3, -3), (1, -7), 'silence', (3, -5), (1, -8)]:
         if val == 'silence':
             symphony = np.append(symphony, np.zeros(int(f_e / 3)))
         else:
