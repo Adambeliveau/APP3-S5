@@ -26,7 +26,7 @@ def find_best_N(f_c: float, f_e: float, N_ech: int) -> int:
     range_step = 1
     deltas = []
     for N in tqdm(range(range_start, range_stop, range_step), desc='finding the best N'):
-        h_n, mod_H_m = build_RIF(N, f_c, f_e, 'low_pass', N_ech)
+        h_n, mod_H_m, _ = build_RIF(N, f_c, f_e, 'low_pass', N_ech)
         mod_H_m_dB = 20 * np.log10(mod_H_m)
         w = [2 * math.pi * m / len(mod_H_m) for m in range(len(mod_H_m))]
         deltas.append(gain - np.interp(math.pi / 1000, w, mod_H_m_dB))
@@ -37,7 +37,7 @@ def find_best_N(f_c: float, f_e: float, N_ech: int) -> int:
     return filter_order
 
 
-def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple[np.ndarray, np.ndarray]:
+def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Builds the RIF filter by:
         1. impulse response -> h[n]
@@ -47,7 +47,7 @@ def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple
     :param f_e: sample rate
     :param type: filter type
     :param length: final length of H[m] (used when padding h[n])
-    :return: h_n, H_m, mod_H_m
+    :return: h_n, mod_H_m, phase_H_m
     """
 
     # impulse response
@@ -58,8 +58,8 @@ def build_RIF(N_filter: int, f_c: float, f_e: float, type: str, length) -> Tuple
     h_n = impulse_switcher[type](N_filter, f_c, f_e)
 
     # frequency response
-    H_m, mod_H_m, _ = fft(np.concatenate((h_n, np.zeros(length - len(h_n)))))
-    return h_n, mod_H_m
+    H_m, mod_H_m, phase_H_m = fft(np.concatenate((h_n, np.zeros(length - len(h_n)))))
+    return h_n, mod_H_m, phase_H_m
 
 
 def low_pass(N_filter: int, f_c: float, f_e: float) -> np.ndarray:

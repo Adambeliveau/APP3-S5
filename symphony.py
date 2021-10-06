@@ -38,8 +38,8 @@ def build_symphony(mod_X_m: np.ndarray, phase_X_m: np.ndarray, w_m: np.ndarray, 
         else:
             nb_note, k = val
             nb_sample = f_e if k in [-7, -8] else int(f_e / 4)
+            note = (synthesis(mod_X_m, phase_X_m, w_m, envelope, k))[nb_sample:2 * nb_sample]
             for i in range(nb_note):
-                note = (synthesis(mod_X_m, phase_X_m, w_m, envelope, k))[nb_sample:2 * nb_sample]
                 symphony = np.append(symphony, note)
 
     return symphony
